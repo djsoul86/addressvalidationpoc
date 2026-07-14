@@ -26,6 +26,13 @@ public record NearbySearchRequest(
     string? RegionCode = null
 );
 
+public record PlaceDetailsRequest(
+    string PlaceId,
+    string? LanguageCode = "en",
+    string? RegionCode = null,
+    string? SessionToken = null
+);
+
 // ── Google API Request Models ───────────────────────────────────────────────
 
 public record GoogleTextSearchRequest(
@@ -92,7 +99,19 @@ public record Place(
     [property: JsonPropertyName("websiteUri")] string? WebsiteUri,
     [property: JsonPropertyName("editorialSummary")] LocalizedText? EditorialSummary,
     [property: JsonPropertyName("plusCode")] PlacePlusCode? PlusCode,
-    [property: JsonPropertyName("viewport")] PlaceViewport? Viewport
+    [property: JsonPropertyName("viewport")] PlaceViewport? Viewport,
+    [property: JsonPropertyName("addressComponents")] PlaceAddressComponent[]? AddressComponents,
+    [property: JsonPropertyName("adrFormatAddress")] string? AdrFormatAddress,
+    [property: JsonPropertyName("utcOffsetMinutes")] int? UtcOffsetMinutes,
+    [property: JsonPropertyName("iconMaskBaseUri")] string? IconMaskBaseUri,
+    [property: JsonPropertyName("iconBackgroundColor")] string? IconBackgroundColor
+);
+
+public record PlaceAddressComponent(
+    [property: JsonPropertyName("longText")] string? LongText,
+    [property: JsonPropertyName("shortText")] string? ShortText,
+    [property: JsonPropertyName("types")] string[]? Types,
+    [property: JsonPropertyName("languageCode")] string? LanguageCode
 );
 
 public record LocalizedText(

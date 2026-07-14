@@ -9,6 +9,7 @@ public interface IPlacesService
 {
     Task<PlacesSearchResponse> TextSearchAsync(TextSearchRequest request, CancellationToken ct = default);
     Task<PlacesSearchResponse> NearbySearchAsync(NearbySearchRequest request, CancellationToken ct = default);
+    Task<Place> GetPlaceDetailsAsync(PlaceDetailsRequest request, CancellationToken ct = default);
 }
 
 public class PlacesService(HttpClient httpClient, IConfiguration configuration) : IPlacesService
@@ -22,6 +23,13 @@ public class PlacesService(HttpClient httpClient, IConfiguration configuration) 
         "places.regularOpeningHours,places.nationalPhoneNumber,places.internationalPhoneNumber," +
         "places.googleMapsUri,places.websiteUri,places.editorialSummary,places.plusCode," +
         "nextPageToken";
+
+    private const string DetailsFieldMask =
+        "id,displayName,formattedAddress,shortFormattedAddress,addressComponents,adrFormatAddress," +
+        "location,types,primaryType,primaryTypeDisplayName,rating,userRatingCount,priceLevel," +
+        "businessStatus,regularOpeningHours,currentOpeningHours,nationalPhoneNumber," +
+        "internationalPhoneNumber,googleMapsUri,websiteUri,editorialSummary,plusCode,viewport," +
+        "utcOffsetMinutes,iconMaskBaseUri,iconBackgroundColor";
 
     private string ApiKey =>
         configuration["Google:Places:ApiKey"]
@@ -66,6 +74,30 @@ public class PlacesService(HttpClient httpClient, IConfiguration configuration) 
         );
 
         return await PostAsync(":searchNearby", googleRequest, DefaultFieldMask, ct);
+    }
+
+    public async Task<Place> GetPlaceDetailsAsync(PlaceDetailsRequest request, CancellationToken ct = default)
+    {
+        var query = new List<string>();
+        if (!string.IsNullOrWhiteSpace(request.LanguageCode))
+            query.Add($"languageCode={Uri.EscapeDataString(request.LanguageCode)}");
+        if (!string.IsNullOrWhiteSpace(request.RegionCode))
+            query.Add($"regionCode={Uri.EscapeDataString(request.RegionCode)}");
+        if (!string.IsNullOrWhiteSpace(request.SessionToken))
+            query.Add($"sessionToken={Uri.EscapeDataString(request.SessionToken)}");
+
+        var queryString = query.Count > 0 ? $"?{string.Join("&", query)}" : string.Empty;
+
+        var placeId = Uri.EscapeDataString(request.PlaceId);
+        using var message = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}/{placeId}{queryString}");
+        message.Headers.Add("X-Goog-Api-Key", ApiKey);
+        message.Headers.Add("X-Goog-FieldMask", DetailsFieldMask);
+
+        var response = await httpClient.SendAsync(message, ct);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<Place>(ct)
+            ?? throw new InvalidOperationException("Empty response from Google Places API.");
     }
 
     private async Task<PlacesSearchResponse> PostAsync<TRequest>(

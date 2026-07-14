@@ -67,6 +67,27 @@ app.MapPost("/api/places/nearby-search", async (
     Optionally filter by place types (e.g. restaurant, cafe, hospital).
     """);
 
+app.MapGet("/api/places/{placeId}", async (
+    string placeId,
+    string? languageCode,
+    string? regionCode,
+    string? sessionToken,
+    IPlacesService service,
+    CancellationToken ct) =>
+{
+    var request = new PlaceDetailsRequest(placeId, languageCode ?? "en", regionCode, sessionToken);
+    var result = await service.GetPlaceDetailsAsync(request, ct);
+    return Results.Ok(result);
+})
+.WithName("PlaceDetails")
+.WithSummary("Get full details for a place using the Google Places API (New)")
+.WithDescription("""
+    Fetches complete details for a place given its place ID (as returned by text-search,
+    nearby-search, or Autocomplete). Returns address components, formatted address, location,
+    opening hours, contact info, and more.
+    If the place ID came from an Autocomplete session, pass the same sessionToken to group billing.
+    """);
+
 // ── Mapbox Search Box API ───────────────────────────────────────────────────
 
 app.MapPost("/api/mapbox/suggest", async (
