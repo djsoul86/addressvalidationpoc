@@ -7,6 +7,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddHttpClient<IAddressValidationService, AddressValidationService>();
 builder.Services.AddHttpClient<IPlacesService, PlacesService>();
 builder.Services.AddHttpClient<IMapboxService, MapboxService>();
+builder.Services.AddHttpClient<IGeocodingService, GeocodingService>();
 
 var app = builder.Build();
 
@@ -32,6 +33,29 @@ app.MapPost("/api/validate-address", async (
 .WithDescription("""
     Submits an address to the Google Address Validation API and returns the full result,
     including verdict, corrected address components, geocode, metadata, and USPS data.
+    """);
+
+// ── Google Geocoding API ────────────────────────────────────────────────────
+
+app.MapGet("/api/geocode", async (
+    string address,
+    string? region,
+    string? language,
+    string? components,
+    IGeocodingService service,
+    CancellationToken ct) =>
+{
+    var request = new GeocodeRequest(address, region, language, components);
+    var result = await service.GeocodeAsync(request, ct);
+    return Results.Ok(result);
+})
+.WithName("Geocode")
+.WithSummary("Geocode an address using the Google Geocoding API")
+.WithDescription("""
+    Converts a free-form address into geographic coordinates (lat/lng), formatted address,
+    address components, place ID, location type, and viewport/bounds.
+    Optional region (ccTLD bias, e.g. "ca"), language, and components (filter, e.g.
+    "country:US|postal_code:90210") parameters narrow or bias the results.
     """);
 
 // ── Google Places API (New) ─────────────────────────────────────────────────

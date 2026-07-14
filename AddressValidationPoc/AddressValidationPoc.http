@@ -7,7 +7,7 @@ POST {{AddressValidationPoc_HostAddress}}/api/validate-address
 Content-Type: application/json
 
 {
-  "addressLines": ["109 Marydale"],
+  "addressLines": ["7 barnwell dr, M1V1y7, on can"],
   "regionCode": "CA"
 }
 
@@ -21,6 +21,23 @@ Content-Type: application/json
   "addressLines": ["1600 Amphitheatre Parkwayy", "Mountain View, CA 94043"],
   "regionCode": "US"
 }
+
+###
+
+### ── Geocoding API ────────────────────────────────────────────────────────
+
+### Geocode a full address
+GET {{AddressValidationPoc_HostAddress}}/api/geocode?address=1600 Amphitheatre Parkway, Mountain View, CA
+
+###
+
+### Geocode with region bias and language
+GET {{AddressValidationPoc_HostAddress}}/api/geocode?address=56731 smith st, oshawa,l1j6m3,on,can&region=ca&language=en
+
+###
+
+### Geocode filtered by components (postal code lookup)
+GET {{AddressValidationPoc_HostAddress}}/api/geocode?address=Toronto&components=country:CA|postal_code:M1V1Y7
 
 ###
 
